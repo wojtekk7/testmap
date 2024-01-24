@@ -15,37 +15,103 @@
     {{node.name}}
   </mat-tree-node>
 </mat-tree> -->
-
-
-<hr>
+<hr />
+<button (click)="mode = !mode">click</button>
+<hr />
+{{ loading }}
 <div *ngFor="let colorItem of predefinedColorsList">
-  <input (change)="handleCheckboxChange()" [(ngModel)]="colorItem.selected" class="form-check-input" type="checkbox" value="" id="flexCheckDefault">
-  <label class="form-check-label" for="flexCheckDefault" [ngStyle]="{ 'background-color': colorItem.color }">
-    {{colorItem.color}}
+  <input
+    [disabled]="loading"
+    (change)="handleCheckboxChange()"
+    [(ngModel)]="colorItem.selected"
+    class="form-check-input"
+    type="checkbox"
+    value=""
+    id="flexCheckDefault"
+  />
+  <label
+    class="form-check-label"
+    for="flexCheckDefault"
+    [ngStyle]="{ 'background-color': colorItem.color }"
+  >
+    {{ colorItem.color }}
   </label>
 </div>
-<hr>
-{{flatItems.length}}
-<hr>
+<hr />
+{{ flatItems.length }}
+<hr />
 
-<div *ngFor="let flatItem of flatItems">
-  <div class="container">
-    <div class="row">
-      <div class="col" [ngStyle]="{ 'background-color': flatItem.color && !flatItem.s2  ? flatItem.color : 'none' }">
-        {{flatItem.s1}}
-      </div>
-      <div class="col" [ngStyle]="{ 'background-color': flatItem.color && !flatItem.s3  ? flatItem.color : 'none' }">
-        {{flatItem.s2}}
-      </div>
-      <div class="col" [ngStyle]="{ 'background-color': flatItem.color && flatItem.s3 && !flatItem.s4 ? flatItem.color : 'none' }">
-        {{flatItem.s3}}
-      </div>
-      <div  class="col" [ngStyle]="{ 'background-color': flatItem.color && flatItem.s4  ? flatItem.color : 'none' }">
-        {{flatItem.s4}}
+<div class="container">
+  <div class="d-flex justify-content-center align-items-center">
+    <div #mykonva></div>
+  </div>
+</div>
+
+<div *ngIf="mode">
+  <!-- <ng-container *ngFor="let item1 of items">
+    <ng-container *ngFor="let item2 of item1.items">
+      <ng-container *ngFor="let item3 of item2.items">
+        <ng-container *ngFor="let item4 of item3.items">
+          <div class="container">
+            <div class="row">
+              <div class="col">{{ item1.name }}</div>
+              <div class="col">{{ item2.name }}</div>
+              <div class="col">{{ item3.name }}</div>
+              <div class="col">{{ item4.name }}</div>
+            </div>
+          </div>
+        </ng-container></ng-container
+      ></ng-container
+    >
+  </ng-container> -->
+</div>
+
+<ng-container *ngIf="!mode">
+  <div *ngFor="let flatItem of flatItems; trackBy: trackByFn">
+    <div class="container">
+      <div class="row">
+        <div
+          class="col"
+          [ngStyle]="{
+            'background-color':
+              flatItem.color && !flatItem.s2 ? flatItem.color : 'none'
+          }"
+        >
+          {{ flatItem.s1 }}
+        </div>
+        <div
+          class="col"
+          [ngStyle]="{
+            'background-color':
+              flatItem.color && !flatItem.s3 ? flatItem.color : 'none'
+          }"
+        >
+          {{ flatItem.s2 }}
+        </div>
+        <div
+          class="col"
+          [ngStyle]="{
+            'background-color':
+              flatItem.color && flatItem.s3 && !flatItem.s4
+                ? flatItem.color
+                : 'none'
+          }"
+        >
+          {{ flatItem.s3 }}
+        </div>
+        <div
+          class="col"
+          [ngStyle]="{
+            'background-color':
+              flatItem.color && flatItem.s4 ? flatItem.color : 'none'
+          }"
+        >
+          {{ flatItem.s4 }}
+        </div>
       </div>
     </div>
   </div>
-</div>
+</ng-container>
 
 <!-- <hr>
 

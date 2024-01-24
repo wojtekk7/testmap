@@ -1,4 +1,10 @@
-import { Component, OnInit } from '@angular/core';
+import {
+  AfterViewInit,
+  Component,
+  ElementRef,
+  OnInit,
+  ViewChild,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterOutlet } from '@angular/router';
 import { FlatMyItem, MyItem } from './myitems';
@@ -12,6 +18,7 @@ import { FlatTreeControl } from '@angular/cdk/tree';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { FormsModule } from '@angular/forms';
+import Konva from 'konva';
 
 export interface ExampleFlatNode {
   expandable: boolean;
@@ -34,7 +41,8 @@ export interface ExampleFlatNode {
   styleUrl: './app.component.scss',
 })
 // 20.11.0
-export class AppComponent implements OnInit {
+export class AppComponent implements OnInit, AfterViewInit {
+  @ViewChild('mykonva') myKonva!: ElementRef;
   title = 'mytest';
   items: MyItem[] = [];
   flatItems: FlatMyItem[] = [];
@@ -77,14 +85,93 @@ export class AppComponent implements OnInit {
     { color: '#0000ff', selected: false },
     { color: '#800080', selected: false },
   ];
+  loading: boolean = false;
+  mode: boolean = true;
+  stage: any;
+  layer: any;
+
+  ngAfterViewInit(): void {
+    console.log(this.myKonva);
+    this.stage = new Konva.Stage({
+      container: this.myKonva.nativeElement,
+      width: 1000,
+      height: 600,
+    });
+
+    this.layer = new Konva.Layer();
+
+    for (let index = 0; index < 20; index++) {
+      let rect = new Konva.Rect({
+        x: 50,
+        y: 50,
+        width: 50,
+        height: 50,
+        fill: 'blue',
+        draggable: true,
+        dragBoundFunc: (pos) => {
+          const containerWidth = this.myKonva.nativeElement.clientWidth;
+          const containerHeight = this.myKonva.nativeElement.clientHeight;
+
+          const minX = 0;
+          const minY = 0;
+          const maxX = containerWidth - rect.width();
+          const maxY = containerHeight - rect.height();
+
+          const x = Math.max(minX, Math.min(pos.x, maxX));
+          const y = Math.max(minY, Math.min(pos.y, maxY));
+
+          return { x, y };
+        },
+      });
+
+      const text = new Konva.Text({
+        x: rect.x() + 10, // Dostosuj położenie tekstu
+        y: rect.y() + 10, // Dostosuj położenie tekstu
+        text: `Opis ${index}`,
+        fontSize: 12,
+        fill: 'white',
+      });
+
+      rect.on('dragmove', () => {
+        // Zwiąż położenie tekstu z położeniem prostokąta
+        text.x(rect.x() + 10);
+        text.y(rect.y() + 10);
+
+        this.stage.batchDraw();
+      });
+
+      this.layer.add(rect);
+      this.layer.add(text);
+    }
+
+    const points = [50, 50, 100, 100, 150, 50, 200, 100];
+
+    // Twórz obiekt Line
+    const polygon = new Konva.Line({
+      points: points,
+      fill: 'green',
+      closed: true, // Zamknij wielokąt,
+      draggable: true,
+    });
+
+    // Dodaj wielokąt do warstwy
+    this.layer.add(polygon);
+
+    this.stage.add(this.layer);
+
+    const canvasElement = this.myKonva.nativeElement.querySelector('canvas');
+    if (canvasElement) {
+      canvasElement.style.border = '2px solid #000'; // Dodaj ramkę do canvasu
+    }
+  }
 
   ngOnInit(): void {
-    for (let index = 1; index < 100; index++) {
+    for (let index = 1; index < 50; index++) {
       this.items.push({ id: uuidv4(), name: `Sektor ${index}`, items: [] });
     }
 
     for (const item2 of this.items) {
-      for (let index = 1; index < 6; index++) {
+      for (let index = 1; index < 11; index++) {
         item2.items.push({
           id: uuidv4(),
           name: `${item2.name}-Dział ${index}`,
@@ -93,7 +180,7 @@ export class AppComponent implements OnInit {
       }
 
       for (const item3 of item2.items) {
-        for (let index = 1; index < 10; index++) {
+        for (let index = 1; index < 15; index++) {
           item3.items.push({
             id: uuidv4(),
             name: `${item3.name}-Regał ${index}`,
@@ -102,7 +189,7 @@ export class AppComponent implements OnInit {
         }
 
         for (const item4 of item3.items) {
-          for (let index = 1; index < Math.floor(Math.random() * 11); index++) {
+          for (let index = 1; index < Math.floor(Math.random() * 21); index++) {
             item4.items.push({
               id: uuidv4(),
               name: `${item4.name}-Półka ${index}`,
@@ -153,13 +240,13 @@ export class AppComponent implements OnInit {
       }
     }
 
-    const data = [...this.flatItems];
-    this.originalFlatItems = [...this.flatItems];
-    this.flatItems = [...data.slice(0, data.length / 2)];
+    // const data = [...this.flatItems];
+    // this.originalFlatItems = [...this.flatItems];
+    // this.flatItems = [...data.slice(0, data.length / 2)];
 
-    setTimeout(() => {
-      this.flatItems.push(...data.slice(data.length / 2, data.length));
-    }, 5000);
+    // setTimeout(() => {
+    //   this.flatItems.push(...data.slice(data.length / 2, data.length));
+    // }, 5000);
   }
 
   colorDiv() {
@@ -169,11 +256,14 @@ export class AppComponent implements OnInit {
     return this.predefinedColors[randomIndex];
   }
 
-  handleCheckboxChange() {
+  async handleCheckboxChange() {
+    // this.loading = true;
+
     const colors = this.predefinedColorsList
       .filter((x) => x.selected)
       .map((x) => x.color);
 
+    // let data: FlatMyItem[];
     if (colors.length === 0) {
       this.flatItems = [...this.originalFlatItems];
     } else {
@@ -181,5 +271,26 @@ export class AppComponent implements OnInit {
         ...this.originalFlatItems.filter((x) => colors.includes(x.color!)),
       ];
     }
+
+    // this.flatItems = [];
+
+    // const chunkSize = 1000;
+
+    // for (let i = 0; i < data.length; i += chunkSize) {
+    //   const chunk = data.slice(i, i + chunkSize);
+    //   this.flatItems.push(...chunk);
+    //   console.log('addding...');
+    //   await this.myWait();
+    // }
+
+    // this.loading = false;
+  }
+
+  myWait() {
+    return new Promise((resolve) => setTimeout(resolve, 1000));
+  }
+
+  trackByFn(index: number, item: any): any {
+    return item.id; // Use a unique identifier for your items
   }
 }
